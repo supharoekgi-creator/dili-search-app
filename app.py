@@ -6,22 +6,24 @@ st.set_page_config(page_title="DILI LiverTox Search", page_icon="🩺")
 st.title("🩺 DILI Search from LiverTox")
 st.markdown("ค้นหาข้อมูล Drug-Induced Liver Injury (DILI) อ้างอิงจาก **LiverTox (NCBI)**")
 
-# ช่องใส่ API Key (ใส่รหัสผ่านเพื่อให้ AI ทำงาน)
-api_key = st.text_input("1. ใส่รหัส Gemini API Key (ใส่ครั้งเดียวตอนเปิดใช้):", type="password")
+# ดึง API Key จากระบบหลังบ้านแบบลับ (Streamlit Secrets)
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=api_key)
+except KeyError:
+    st.error("ยังไม่ได้ตั้งค่า API Key ในระบบหลังบ้าน กรุณาตั้งค่าใน Streamlit Settings")
+    st.stop()
 
-# ช่องค้นหาชื่อยา
-drug_name = st.text_input("2. พิมพ์ชื่อยา (เช่น Amoxicillin-clavulanate):")
+# ช่องค้นหาชื่อยา (เหลือแค่ช่องนี้ช่องเดียว)
+drug_name = st.text_input("พิมพ์ชื่อยา (เช่น Amoxicillin-clavulanate):")
 
 if st.button("ค้นหาข้อมูล", type="primary"):
-    if not api_key:
-        st.warning("กรุณาใส่ API Key ในช่องข้อ 1 ก่อนครับ")
-    elif not drug_name:
-        st.warning("กรุณาพิมพ์ชื่อยาในช่องข้อ 2 ครับ")
+    if not drug_name:
+        st.warning("กรุณาพิมพ์ชื่อยาครับ")
     else:
         with st.spinner(f'กำลังดึงข้อมูล "{drug_name}" จาก LiverTox...'):
             try:
-                # ตั้งค่า AI
-                genai.configure(api_key=api_key)
+                # ใช้โมเดลมาตรฐานที่เสถียร
                 model = genai.GenerativeModel('gemini-pro')
                 
                 # คำสั่งที่บังคับให้ AI ดึงเฉพาะ 6 ข้อ จาก Livertox
@@ -45,4 +47,4 @@ if st.button("ค้นหาข้อมูล", type="primary"):
                 st.markdown(response.text)
                 
             except Exception as e:
-                st.error(f"เกิดข้อผิดพลาด: รหัส API Key อาจไม่ถูกต้อง หรือระบบขัดข้อง ({e})")
+                st.error(f"เกิดข้อผิดพลาด: {e}")
