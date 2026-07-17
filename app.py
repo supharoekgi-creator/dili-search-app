@@ -22,7 +22,7 @@ if st.button("ค้นหาข้อมูล", type="primary"):
             try:
                 # ตั้งค่า AI
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-pro')
                 
                 # คำสั่งที่บังคับให้ AI ดึงเฉพาะ 6 ข้อ จาก Livertox
                 prompt = f"""
