@@ -5,14 +5,12 @@ st.set_page_config(page_title="DILI Search", page_icon="🩺")
 st.title("🩺 DILI Search from LiverTox")
 st.markdown("ค้นหาข้อมูล Drug-Induced Liver Injury อ้างอิงจาก **LiverTox (NCBI)**")
 
-# ระบบจัดการ API Key อัตโนมัติ (ไม่ให้แอปพัง)
+# ดึง API Key 
 api_key = ""
 try:
-    # พยายามดึงรหัสจากระบบหลังบ้านก่อน
     api_key = st.secrets["GEMINI_API_KEY"]
 except:
-    # ถ้าดึงไม่ได้ หรือตั้งค่าผิด จะแสดงช่องให้ใส่หน้าเว็บแทน
-    api_key = st.text_input("ใส่ Gemini API Key (เฉพาะคนที่มีลิงก์):", type="password")
+    api_key = st.text_input("ใส่ Gemini API Key (หากยังไม่ได้ตั้งค่า Secrets):", type="password")
 
 # ช่องค้นหาชื่อยา
 drug_name = st.text_input("พิมพ์ชื่อยา (เช่น Amoxicillin):")
@@ -28,6 +26,9 @@ if st.button("ค้นหาข้อมูล", type="primary"):
                 # ตั้งค่ารหัส API
                 genai.configure(api_key=api_key)
                 
+                # บังคับใช้โมเดลรุ่นใหม่ล่าสุดเท่านั้น
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
                 prompt = f"""
                 You are a medical assistant extracting DILI data strictly from the LiverTox database (NCBI) (https://www.ncbi.nlm.nih.gov/books/NBK547852/). 
                 Search for the drug: {drug_name}
@@ -41,13 +42,7 @@ if st.button("ค้นหาข้อมูล", type="primary"):
                 Do NOT use external sources. Do NOT hallucinate data.
                 """
                 
-                # ระบบสลับโมเดลอัตโนมัติ (กัน Error รุ่นเก่า/ใหม่)
-                try:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    response = model.generate_content(prompt)
-                except:
-                    model = genai.GenerativeModel('gemini-pro')
-                    response = model.generate_content(prompt)
+                response = model.generate_content(prompt)
                 
                 # แสดงผลลัพธ์
                 st.success("✅ ค้นหาสำเร็จ!")
@@ -55,4 +50,4 @@ if st.button("ค้นหาข้อมูล", type="primary"):
                 st.markdown(response.text)
                 
             except Exception as e:
-                st.error(f"❌ เกิดข้อผิดพลาดในการดึงข้อมูล โปรดตรวจสอบ API Key หรือชื่อยาอีกครั้ง (Error: {e})")
+                st.error(f"❌ เกิดข้อผิดพลาดจากฝั่งระบบ API ของ Google: {e}")
